@@ -32,6 +32,13 @@ if (EMSCRIPTEN)
             ${CMAKE_CURRENT_SOURCE_DIR}/schema/mirrors.h ${CMAKE_CURRENT_SOURCE_DIR}/schema/annotations.yml
             ${CMAKE_CURRENT_SOURCE_DIR}/schema/roots.yml ${SCHEMA_HEADERS}
         COMMENT "Generating archive endian schema tables")
+    # Assertion messages carry __FILE__: with the whole path, every "assertion
+    # failed" line in a player's crash report named the build machine's home
+    # directory. Strip the repository root from everything compiled below
+    # (the game, the port and Aurora) so they read src/melee/... instead.
+    get_filename_component(GAME_ROOT_ABS ${GAME_ROOT} ABSOLUTE)
+    add_compile_options(-ffile-prefix-map=${GAME_ROOT_ABS}/=)
+
     include(cmake/game_sources.cmake)
 
     # Port-only sources. Compiled WITHOUT src/compat so `bool` matches Aurora's

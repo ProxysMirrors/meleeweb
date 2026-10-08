@@ -45,7 +45,7 @@ const presses = (process.argv.find(a => a.startsWith('--press='))?.slice(8) ?? '
 import { readFileSync, unlinkSync } from 'node:fs';
 const browserName = process.argv.find(a => a.startsWith('--browser='))?.slice(10) ?? 'chromium';
 if (!['chromium', 'firefox'].includes(browserName)) throw new Error(`unknown browser ${browserName}`);
-const port = 8766;
+const port = Number(process.env.PROBE_PORT ?? 8766);
 
 const asFile = buildDir.endsWith('.html');
 const server = asFile ? null

@@ -161,7 +161,9 @@ function crashReport(kind, detail) {
     `build: ${buildId()}`,
     `when: ${new Date().toISOString()}`,
     `kind: ${kind}`,
-    `page: ${location.protocol}//${location.host}${location.pathname}${location.search}`,
+    // The page's name only: players share these reports, and a file:// path
+    // would carry their user folder.
+    `page: ${location.protocol}//${location.host}/${location.pathname.split('/').pop()}${location.search}`,
     `renderer: ${$('renderer')?.textContent || '?'} (menu: ${$('renderer-select')?.value || '?'})  engine: ${ENGINE}`,
     `browser: ${navigator.userAgent}`,
     `cores: ${navigator.hardwareConcurrency ?? '?'}  deviceMemoryGB: ${navigator.deviceMemory ?? '?'}  screen: ${screen.width}x${screen.height}`,
