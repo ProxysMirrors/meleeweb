@@ -37,6 +37,7 @@ annotations.yml (per struct name):
   __union__: { disc_offset: 4, cases: {...} }   the struct itself is a union chosen by a word inside it
 """
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -173,6 +174,9 @@ class Gen:
             target = self.need_name(name[:-1].strip())[len("&port_T_"):]
             return self.ptr_elem_helper(target)
         if name not in self.by_name:
+            if os.environ.get("GEN_SCHEMA_LIST_UNKNOWN"):  # list every problem in one run
+                self.warn(f"unknown type '{name}'")
+                return "&port_T___opaque"
             raise SystemExit(f"gen_schema: unknown type '{name}' (not defined in the given headers)")
         return self.need(self.by_name[name], name)
 
@@ -402,7 +406,13 @@ class Gen:
             return "LEN_RELOC_RUN", 0
         if fa.get("object_run"):
             return "LEN_OBJECT_RUN", 0
-        k = next(k for k in kids if k.spelling == fa["len_field"])
+        k = next((k for k in kids if k.spelling == fa["len_field"]), None)
+        if k is None:
+            msg = f"len_field '{fa['len_field']}' names no field (fields: {', '.join(x.spelling for x in kids if x.spelling)})"
+            if os.environ.get("GEN_SCHEMA_LIST_UNKNOWN"):
+                self.warn(msg)
+                return "LEN_CONST", 0
+            raise SystemExit(f"gen_schema: {msg}")
         return {4: "LEN_FIELD_U32", 2: "LEN_FIELD_U16", 1: "LEN_FIELD_U8"}[k.type.get_size()], k.get_field_offsetof() // 8
 
 

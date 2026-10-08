@@ -4,11 +4,12 @@
 //! The DWARF repeats every header's types in every unit, and deduplicating
 //! them takes seconds and gigabytes. The cache keeps one DIE per canonical
 //! type, with every type reference pointing to those, plus what is
-//! otherwise computed from the rest of the DWARF: the macros and the types
-//! the loaders load each root name as.
+//! otherwise computed from the rest of the DWARF: the macros, the types
+//! the loaders load each root name as, and the tables `DAT_SCRIPT`s read.
 
 use super::{
-    DieId, Type, TypeGraph, TypeKind,
+    DieId, Global, Type, TypeGraph, TypeKind,
+    annotation::{DatTag, Script},
     canonical::Canonical,
     roots::{RootName, roots},
 };
@@ -23,14 +24,16 @@ use std::{
 
 #[derive(Serialize, Deserialize)]
 pub struct TypesFile {
-    /// Only the canonical types' representatives; no variables, globals or
-    /// section contents.
+    /// Only the canonical types' representatives; no variables, and only the
+    /// globals (with their contents) that `DAT_SCRIPT`s read.
     pub graph: TypeGraph,
     /// Macros and enum constants, for annotation expressions.
     pub macros: HashMap<String, String>,
     /// The type each root name is loaded as, by the loaders the DWARF
     /// records.
     pub roots: BTreeMap<String, DieId>,
+    /// Values bound while resolving each root's name in the loader table.
+    pub root_bindings: BTreeMap<String, Vec<(String, u64)>>,
 }
 
 impl TypesFile {
@@ -40,10 +43,54 @@ impl TypesFile {
             canonical.of(die).map_or(die, |id| canonical.get(id).rep)
         };
         let mut roots_by_name = BTreeMap::new();
+        let mut root_bindings = BTreeMap::new();
         for root in roots(graph, &canonical) {
-            if let (RootName::Literal(name), Some(ty)) = (root.name, root.ty) {
+            // Untyped roots keep their bindings, for `dat_symbols.txt` types
+            let RootName::Literal(name) = root.name else {
+                continue;
+            };
+            if !root.bindings.is_empty() {
+                root_bindings.entry(name.clone()).or_insert(root.bindings);
+            }
+            if let Some(ty) = root.ty {
                 roots_by_name.entry(name).or_insert(rep(ty));
             }
+        }
+        // The tables of command lengths scripts read from the code
+        let mut globals = HashMap::new();
+        let mut sections = Vec::new();
+        let tables = graph
+            .types
+            .values()
+            .filter_map(|t| match &t.kind {
+                TypeKind::Record { members, .. } => Some(members),
+                _ => None,
+            })
+            .flatten()
+            .flat_map(|m| &m.annotations)
+            .filter_map(|a| match DatTag::parse(graph.str(a.value?))? {
+                DatTag::Script(Script::Table(table)) => Some(table),
+                _ => None,
+            });
+        for table in tables {
+            let Some(name) = graph.strings.get(&table) else {
+                continue;
+            };
+            let Some(global) = graph.globals.get(&name) else {
+                continue;
+            };
+            let size = global.ty.and_then(|ty| canonical.byte_size(graph, ty));
+            let bytes = size.and_then(|size| graph.bytes(global.address, size as usize));
+            if let Some(bytes) = bytes {
+                sections.push((global.address, bytes.to_vec()));
+            }
+            globals.insert(
+                name,
+                Global {
+                    ty: global.ty.map(rep),
+                    address: global.address,
+                },
+            );
         }
         let types = canonical
             .types
@@ -66,12 +113,15 @@ impl TypesFile {
                 })
                 .collect(),
             types,
+            globals,
+            sections,
             ..TypeGraph::default()
         };
         TypesFile {
             graph: compact,
             macros: macros(graph),
             roots: roots_by_name,
+            root_bindings,
         }
     }
 

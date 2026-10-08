@@ -7,6 +7,8 @@
 #include <melee/lb/forward.h>
 #include <sysdolphin/baselib/forward.h>
 
+#include <dat_macros.h>
+
 #include <dolphin/mtx.h>
 #include <dolphin/types.h>
 
@@ -49,6 +51,10 @@ typedef struct TempS TempS;
 typedef struct UnkCostumeStruct UnkCostumeStruct;
 typedef struct UnkFloat6_Camera UnkFloat6_Camera;
 typedef u32 MotionFlags;
+
+/// CPU bytecode interpreted by #ftCo_800B3E04. Each #CPUCommand is
+/// followed by its argument bytes; #CpuCmd_Done ends the script.
+typedef u8* CpuCmdScript DAT_BYTE_SCRIPT(cpuCommandLength(_command));
 
 #ifdef M2C
 typedef struct Fighter_GObj Fighter_GObj;
@@ -480,6 +486,8 @@ typedef enum CpuKind {
 } CpuKind;
 
 /// Color animation ID.
+/// @todo: populate enum and replace constants when used (like in calls to
+/// ftCo_800BFFD0)
 typedef enum FtColAnim {
     /// IDs starting here index the separate spycloak list after subtraction.
     /* 0x7B */ FtColAnim_SpycloakStart = 0x7B,

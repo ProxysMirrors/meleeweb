@@ -94,7 +94,7 @@ void it_80295F38(Item_GObj* gobj)
 
     if (gobj != NULL) {
         ip = GET_ITEM(gobj);
-        da = ip->xC4_article_data->x4_specialAttributes;
+        da = &ip->xC4_article_data->x4_specialAttributes->tarucann;
         params = it_803B8610;
         params.state = HitCapsule_Enabled;
         params.damage = da->x30;
@@ -122,14 +122,14 @@ void it_80295F38(Item_GObj* gobj)
 int it_802960B8(Item_GObj* gobj)
 {
     itTaruCann_DatAttrs* da =
-        GET_ITEM(gobj)->xC4_article_data->x4_specialAttributes;
+        &GET_ITEM(gobj)->xC4_article_data->x4_specialAttributes->tarucann;
     return da->x2C;
 }
 
 int it_802960CC(Item_GObj* gobj)
 {
     itTaruCann_DatAttrs* da =
-        GET_ITEM(gobj)->xC4_article_data->x4_specialAttributes;
+        &GET_ITEM(gobj)->xC4_article_data->x4_specialAttributes->tarucann;
     return da->x28;
 }
 
@@ -155,7 +155,8 @@ static void order_sdata2(void)
 void it_3F14_Logic5_Spawned(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     float temp_var;
     float temp;
     ip->facing_dir = -1.0f;
@@ -206,7 +207,8 @@ bool it_802961E8(Item_GObj* gobj)
 void it_802962E0(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     f32 temp_f1;
     f32 temp_f2;
     f32 var_f0;
@@ -296,7 +298,8 @@ bool itTarucann_UnkMotion0_Coll(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
     HSD_JObj* jobj = GET_JOBJ(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     CollData* coll = &ip->x378_itemColl;
     Vec3 normal = it_803B8634;
     if (it_8026D564(gobj) == 0) {
@@ -352,7 +355,8 @@ bool itTarucann_UnkMotion1_Coll(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
     ItemAttr* attrs = ip->xCC_item_attr;
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     f32 y;
     if (it_8026DA08(gobj) != 0) {
         it_802762B0(ip);
@@ -375,7 +379,8 @@ bool itTarucann_UnkMotion1_Coll(Item_GObj* gobj)
 void itTaruCann_Logic5_PickedUp(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* attrs = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* attrs =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     ip->xDB0_itcmd_var1 = 1;
     Item_80268E5C(gobj, 2, ITEM_ANIM_UPDATE);
     it_80275158(gobj, attrs->x24);
@@ -460,7 +465,8 @@ bool itTarucann_UnkMotion6_Coll(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
     ItemAttr* attrs = ip->xCC_item_attr;
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     CollData* coll = &ip->x378_itemColl;
     f32 var_f1;
     s32 flags;
@@ -546,7 +552,8 @@ void itTarucann_UnkMotion8_Phys(Item_GObj* gobj)
 bool itTarucann_UnkMotion8_Coll(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     CollData* coll = &ip->x378_itemColl;
     s32 flags;
     PAD_STACK(12);
@@ -600,7 +607,8 @@ static inline void inline_itTarucann_UnkMotion7_Phys(Item_GObj* gobj)
 float itTarucann_UnkMotion7_Phys(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     f32 var_f1;
     PAD_STACK(16);
     it_802962E0(gobj);
@@ -681,7 +689,8 @@ bool itTarucann_UnkMotion9_Coll(Item_GObj* gobj)
 bool it_80297790(Item_GObj* gobj)
 {
     Item* ip = GET_ITEM(gobj);
-    itTaruCann_DatAttrs* da = ip->xC4_article_data->x4_specialAttributes;
+    itTaruCann_DatAttrs* da =
+        &ip->xC4_article_data->x4_specialAttributes->tarucann;
     PAD_STACK(16);
     HSD_JObjClearFlagsAll(gobj->hsd_obj, JOBJ_HIDDEN);
     switch (ip->msid) {
