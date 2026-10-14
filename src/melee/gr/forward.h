@@ -10,7 +10,12 @@
 #define HSD_GOBJ_CLASS_GROUND 13
 #define HSD_GOBJ_PLINK_GROUND 5
 
+typedef union grAnimeCallback grAnimeCallback;
 struct grCorneria_GroundVars;
+typedef struct grFigureGet_YakumonoParam grFigureGet_YakumonoParam;
+typedef struct grGreatBay_YakumonoParam grGreatBay_YakumonoParam;
+typedef struct grHeal_YakumonoParam grHeal_YakumonoParam;
+typedef struct grYorster_YakumonoParam grYorster_YakumonoParam;
 typedef struct grDynamicAttr_UnkStruct grDynamicAttr_UnkStruct;
 typedef struct GrJoint GrJoint;
 typedef struct Ground Ground;

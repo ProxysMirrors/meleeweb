@@ -317,6 +317,14 @@ struct lbCardNew_SnapshotEntry {
 };
 ASSERT_SIZE(lbCardNew_SnapshotEntry, 0x8);
 
+/// A rumble pattern in @c lbRumbleData (LbRb.dat), played by #lb_80014574.
+struct lbRumbleEntry {
+    /// A zero-terminated script passed to #HSD_PadRumbleAdd.
+    /* +0 */ union HSD_Rumble* list DAT_TERMINATED(0);
+    /* +4 */ u8 pri;
+    /* +5 */ u8 x5;
+};
+
 struct ColorOverlay_UnkInner {
     /*  +0 */ int x0;
     /*  +0 */ u8 x4[0x7B - 0x4];
@@ -840,14 +848,6 @@ struct it_create_hitbox_4 {
     u32 x40_b3 : 1;
     u32 x40_b2 : 1;
 };
-struct spawn_hitbox_skip {
-    u8 _0[0xF];
-    u32 xF_b0 : 1;
-    u32 xF_b1 : 1;
-    u32 xF_b2 : 1;
-    u32 xF_b3 : 1;
-    u32 xF_b4 : 1;
-};
 struct sound_effect_0 {
     u32 opcode : 6;
     u32 behavior : 8;
@@ -901,8 +901,7 @@ struct unk_fx_0 {
     u32 opcode : 6;
     u32 x0_b6_7 : 2;
     u32 x1_b0_7 : 8;
-    u32 x2_b0_7 : 8;
-    u32 x3_b0_7 : 8;
+    u32 gfx_id : 16;
 };
 struct smash_charge_0 {
     u32 opcode : 6;
