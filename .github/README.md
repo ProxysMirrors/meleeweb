@@ -11,9 +11,9 @@ Chrome and Firefox), either from a web server or from a single offline HTML
 file.
 
 > [!IMPORTANT]
-> Nothing from the game is included. You need your own disc image of
+> Just like any other decompilation port project, nothing from the game is included. You need your own disc image of
 > Super Smash Bros. Melee, NTSC-U version 1.02 (game ID `GALE01`). The page
-> reads it from your computer; it is never uploaded anywhere.
+> reads it from your computer; it is NEVER uploaded anywhere.
 
 It builds:
 
@@ -33,8 +33,8 @@ Both play the same disc:
 **To play**, you only need a current Chrome or Firefox and your disc image.
 Everything below is for building the port yourself.
 
-The port is built and tested on **Linux**. The build scripts are Bash; Windows
-(through WSL) and macOS have not been tried.
+Developed, built and tested on **Linux**. Windows has a native PowerShell build
+script (`port/tools/setup.ps1`, no WSL needed); macOS has not been tested.
 
 - [Git](https://git-scm.com/), [CMake](https://cmake.org/) 3.25 or newer,
   [Ninja](https://ninja-build.org/) and Python 3.
@@ -61,10 +61,12 @@ tests also need a native C/C++ compiler (GCC or Clang).
 
 # Building
 
+## Linux / macOS
+
 - Clone the repository:
   ```sh
-  git clone https://github.com/VibingSticks/melee-web.git
-  cd melee-web
+  git clone https://github.com/ProxysMirrors/meleeweb.git
+  cd meleeweb
   ```
 - Install Emscripten and Aurora (the GameCube API layer) at their pinned
   versions, with the port's patches applied. This only needs doing once:
@@ -99,6 +101,30 @@ tests also need a native C/C++ compiler (GCC or Clang).
 
 The `web-debug` preset builds with debug information for development.
 More detail on the port's internals is in [`port/README.md`](../port/README.md).
+
+## Windows (PowerShell)
+
+Windows has a native build script — no WSL needed. From the repo root:
+
+```powershell
+git clone https://github.com/ProxysMirrors/meleeweb.git
+cd meleeweb
+.\port\tools\setup.ps1 web-release        # installs emsdk + Aurora, then builds
+python -m http.server -d port\build\web-release 8080
+```
+
+Then open <http://localhost:8080>. For the single offline file:
+
+```powershell
+.\port\tools\setup.ps1 web-single
+python port\tools\pack_single_html.py port\build\web-single -o port\melee-offline.html
+```
+
+`setup.ps1` installs emsdk and Aurora and builds in one run; pass `-NoBuild` to
+stop after setup. In a new shell, `. .\port\tools\env.ps1` puts emcc back on
+`PATH`. The WebGL2 shader translator (`build_naga.sh`) is still Bash-only, so
+WebGPU works out of the box but the WebGL2 fallback currently needs that script
+run under Git Bash or WSL.
 
 # Playing
 
@@ -212,13 +238,13 @@ Known issues:
   its sound chip, not on the disc.
 - Slow machines (for example a 2-core Chromebook) draw around 20 frames a
   second. Frame skip keeps the game itself at full speed.
-
+- Graphics and texture bugs can appear differently on other systems.
 # Branches
 
-- `master`: the fork's release branch.
-- `web-port`: development.
+- `master`: the main branch.
+- `Unstable`: development/still testing code.
 - Changes from [doldecomp/melee](https://github.com/doldecomp/melee) are merged
-  in from time to time.
+  in from time to time. Sometimes.
 
 # Credits
 
