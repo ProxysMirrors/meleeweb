@@ -312,6 +312,56 @@ const rendererReady = selectRenderer().then((r) => {
   throw e;
 });
 
+// The disc, kept in IndexedDB so a return visit starts without the picker. A
+// File is a Blob: the browser stores it on disk, so a 1.2 GB ISO costs no
+// memory and DiscSource slices it on load exactly as it slices a freshly
+// picked File. Same idiom as savedPipelines below.
+const savedDisc = (() => {
+  const DB = 'melee-disc', STORE = 'disc', KEY = 'current';
+  const open = () => new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  const store = (db, mode) => db.transaction(STORE, mode).objectStore(STORE);
+  return {
+    async load() {
+      try {
+        const db = await open();
+        return await new Promise((resolve) => {
+          const req = store(db, 'readonly').get(KEY);
+          req.onsuccess = () => resolve(req.result ?? null);
+          req.onerror = () => resolve(null);
+        });
+      } catch { return null; }
+    },
+    save(file) { // fire-and-forget: the running game already has the disc
+      open().then((db) => store(db, 'readwrite').put(file, KEY)).catch(() => {});
+    },
+    async clear() {
+      try {
+        const db = await open();
+        await new Promise((resolve) => {
+          const req = store(db, 'readwrite').delete(KEY);
+          req.onsuccess = resolve; req.onerror = resolve;
+        });
+      } catch { /* nothing to clear */ }
+    },
+  };
+})();
+
+// Wrap a disc File/Blob and read its file table. Throws only for a disc
+// problem (not GALE01, truncated, unreadable) -- which is what lets the
+// auto-load path tell "bad disc, forget it" apart from "the game crashed after
+// a good disc", so a crash never wipes the remembered disc.
+async function readDisc(file) {
+  const disc = new DiscSource(file);
+  const hdr = await disc.validate();
+  const fst = new Uint8Array(await disc.read(hdr.fstOffset, hdr.fstSize));
+  return { disc, fst, hdr };
+}
+
 picker.addEventListener('change', async () => {
   const file = picker.files[0];
   if (!file) return;
@@ -319,9 +369,9 @@ picker.addEventListener('change', async () => {
   rendererSelect.disabled = true; // the game is about to start on the current renderer
   try {
     const renderer = await rendererReady;
-    const disc = new DiscSource(file);
-    const hdr = await disc.validate();
-    const fst = new Uint8Array(await disc.read(hdr.fstOffset, hdr.fstSize));
+    const { disc, fst, hdr } = await readDisc(file);
+    savedDisc.save(file);           // only after it reads: never store a bad disc
+    navigator.storage?.persist?.(); // best-effort: don't let the browser evict it
     status(`Disc ${hdr.gameId} (${(file.size / 1048576).toFixed(0)} MB). Starting…`);
     await startGame(disc, fst, renderer);
   } catch (e) {
@@ -329,6 +379,37 @@ picker.addEventListener('change', async () => {
     picker.disabled = false;
     rendererSelect.disabled = false;
   }
+});
+
+// A disc remembered from a previous visit starts the game without the picker.
+// A disc problem (evicted to a truncated blob, not GALE01) forgets it and falls
+// back to the picker; a renderer failure or a later game crash leaves it alone.
+(async () => {
+  let renderer;
+  try { renderer = await rendererReady; } catch { return; } // its own handler showed why
+  const file = await savedDisc.load();
+  if (!file) return;
+  picker.disabled = true;
+  rendererSelect.disabled = true;
+  status('Using your saved disc…');
+  let ready;
+  try {
+    ready = await readDisc(file);
+  } catch {
+    await savedDisc.clear();
+    status('Saved disc could not be used -- pick your disc image to start.', true);
+    picker.disabled = false;
+    rendererSelect.disabled = false;
+    return;
+  }
+  status(`Disc ${ready.hdr.gameId} (${(file.size / 1048576).toFixed(0)} MB). Starting…`);
+  await startGame(ready.disc, ready.fst, renderer);
+})();
+
+// Forget the remembered disc and reload to the picker (toolbar button).
+$('forget-disc')?.addEventListener('click', async () => {
+  await savedDisc.clear();
+  location.reload();
 });
 
 async function startGame(disc, fst, renderer) {
