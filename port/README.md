@@ -1,5 +1,10 @@
 # Melee web port
 
+Status: playable and stable (as of 10/16/26) -- boots and plays through real
+matches. Still hunting any stray issues and fixing a graphical bug (the
+translucent overlay over the 3D scene) and some UI. Active work lands on the
+`Unstable` branch; `master` is the last known-good push.
+
 Builds the decompiled game into WebAssembly. Two outputs:
 
 - **Hosted**: a static directory served by any web server.
@@ -33,18 +38,44 @@ Not working yet, roughly in the order worth fixing:
 
 ## Setup
 
+Linux / macOS:
+
 ```sh
 port/tools/setup.sh          # installs emsdk under port/extern, clones Aurora at the pinned rev
 source port/tools/env.sh     # puts emcc on PATH
 ```
 
+Windows (PowerShell):
+
+```powershell
+.\port\tools\setup.ps1       # installs emsdk, clones+patches Aurora, then builds web-debug
+. .\port\tools\env.ps1       # in a fresh shell, puts emcc on PATH
+```
+
+`setup.ps1` does setup and the build in one run. Pass a preset name
+(`web-release`, `web-single`, `host-tests`) or `-NoBuild` to stop after setup.
+
 ## Build
+
+Linux / macOS:
 
 ```sh
 cd port
 cmake --preset web-debug && cmake --build --preset web-debug
 python3 -m http.server -d build/web-debug 8080
 ```
+
+Windows (PowerShell), once `setup.ps1` has run:
+
+```powershell
+. .\port\tools\env.ps1
+cd port
+cmake --preset web-debug; cmake --build --preset web-debug
+python -m http.server -d build/web-debug 8080
+```
+
+Presets are the same on every platform: `web-debug`, `web-release`,
+`web-single` (the offline file) and `host-tests`.
 
 ## Offline file
 
