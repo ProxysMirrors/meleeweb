@@ -886,7 +886,17 @@ void grCastle_801CE578(Ground_GObj* gobj)
 
     if (!gp->u.castle11.xC4.b0) {
         gp = (Ground*) gobj->user_data;
-        if (grAnime_801C83D0(gobj, 0, 1)) {
+        /* Wait for the Banzai Bill to have spawned (xCC, set by the block
+         * above once its xCA launch delay elapses) before running the teardown
+         * that despawns it. On the GameCube the aimer's animation always
+         * outlasts that delay, so the Bill exists by the time this fires; the
+         * port can finish the animation first, and the original code would then
+         * set xC4.b0 with xCC still 0, skip the `Ground_801C4A08(xCC)` despawn,
+         * and leave the Bill -- spawned a few frames later -- hovering and
+         * shaking the camera (grCastle_801CE860's QuakeKind_Loop) for the rest
+         * of the match. Gating on xCC keeps xC4.b0 at 0 until the despawn has a
+         * target, so the Bill is always cleaned up. */
+        if (gp->u.castle11.xCC != 0 && grAnime_801C83D0(gobj, 0, 1)) {
             gp->u.castle11.xC8 = yakumono_param->x58;
             gp->u.castle11.xC4.b0 = 1;
             grMaterial_801C9604(gobj, yakumono_param->x114, 0);
